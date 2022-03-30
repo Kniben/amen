@@ -1,0 +1,9 @@
+[package]
+name = "amen"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+trie-rs = "0.1"
+termion = "1.5"
+nix = "0.23"
