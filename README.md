@@ -9,6 +9,8 @@
 
 An interactive Unix-based terminal program that lets you select items from a list by typing their abbreviation! 🙏
 
+Inspired by the amazing [fzf](https://github.com/junegunn/fzf).
+
  [![asciicast](doc/amen.gif)](doc/amen.gif)
 
 # Installing
