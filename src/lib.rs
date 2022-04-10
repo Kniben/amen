@@ -1,12 +1,11 @@
 use std::collections::HashMap;
 use std::io::{Read, Write};
-use termion::{input::TermRead, screen::AlternateScreen};
+use termion::input::TermRead;
 use trie_rs::{Trie, TrieBuilder};
 
 mod abbrev;
 
 use crate::abbrev::Abbrev;
-use termion::raw::IntoRawMode;
 
 #[derive(Debug)]
 struct AmenError<'a>(&'a str);
@@ -22,13 +21,10 @@ pub fn run_amen<'a, W: Write, R: Read>(
     output: W,
     phrases: &[&'a str],
 ) -> Result<&'a str, Box<dyn std::error::Error>> {
-    let screen = AlternateScreen::from(output);
-    let output_terminal = screen.into_raw_mode()?;
-
     let abbrevs = abbrev::assign_abbrevs(phrases);
     let trie = collect_abbrevs_to_trie(&abbrevs);
 
-    if let Some(phrase) = pick_phrase(input, output_terminal, abbrevs, trie)? {
+    if let Some(phrase) = pick_phrase(input, output, abbrevs, trie)? {
         Ok(phrase)
     } else {
         Err(Box::new(AmenError("No item selected")))

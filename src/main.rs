@@ -3,6 +3,8 @@ use nix::unistd::{dup, dup2};
 use std::error::Error;
 use std::fs::File;
 use std::os::unix::io::AsRawFd;
+use termion::raw::IntoRawMode;
+use termion::screen::AlternateScreen;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let phrases = read_input_phrases()?;
@@ -13,7 +15,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     let tty = &termion::get_tty()?;
 
     let phrases = &*phrases.iter().map(AsRef::as_ref).collect::<Vec<_>>();
-    let result = run_amen(tty, tty, phrases)?;
+
+    let screen = AlternateScreen::from(tty);
+    let terminal = screen.into_raw_mode()?;
+
+    let result = run_amen(tty, terminal, phrases)?;
 
     dup2(prev_stdout, stdout_fd)?;
 
