@@ -1,19 +1,19 @@
 use std::collections::HashMap;
 use trie_rs::TrieBuilder;
 
-pub struct Abbrev {
-    pub phrase: String,
+pub struct Abbrev<'a> {
+    pub phrase: &'a str,
     pub abbrev: String,
     pub indices: Vec<usize>,
 }
 
-pub fn assign_abbrevs(all_options: Vec<String>) -> HashMap<String, Abbrev> {
-    let all_options_trie = copy_to_trie(&all_options);
+pub fn assign_abbrevs<'a>(all_options: &[&'a str]) -> HashMap<String, Abbrev<'a>> {
+    let all_options_trie = copy_to_trie(all_options);
     let mut items_by_abbrev = HashMap::new();
     let count = all_options.len();
 
     for original in all_options {
-        let (abbrev, indices) = assign_abbrev_indices(&original, &all_options_trie, count);
+        let (abbrev, indices) = assign_abbrev_indices(original, &all_options_trie, count);
         items_by_abbrev.insert(
             abbrev.clone(),
             Abbrev {
@@ -26,7 +26,7 @@ pub fn assign_abbrevs(all_options: Vec<String>) -> HashMap<String, Abbrev> {
     items_by_abbrev
 }
 
-fn copy_to_trie(items: &[String]) -> trie_rs::Trie<u8> {
+fn copy_to_trie(items: &[&str]) -> trie_rs::Trie<u8> {
     let mut trie_builder = TrieBuilder::new();
     for item in items.iter() {
         trie_builder.push(item);

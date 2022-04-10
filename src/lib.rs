@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::io::{Error, ErrorKind, Read, Write};
+use std::io::{Read, Write};
 use termion::{input::TermRead, screen::AlternateScreen};
 use trie_rs::{Trie, TrieBuilder};
 
@@ -8,11 +8,20 @@ mod abbrev;
 use crate::abbrev::Abbrev;
 use termion::raw::IntoRawMode;
 
-pub fn run_amen<W: Write, R: Read>(
+#[derive(Debug)]
+struct AmenError<'a>(&'a str);
+impl std::fmt::Display for AmenError<'_> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+impl std::error::Error for AmenError<'_> {}
+
+pub fn run_amen<'a, W: Write, R: Read>(
     input: R,
     output: W,
-    phrases: Vec<String>,
-) -> Result<String, Error> {
+    phrases: &[&'a str],
+) -> Result<&'a str, Box<dyn std::error::Error>> {
     let screen = AlternateScreen::from(output);
     let output_terminal = screen.into_raw_mode()?;
 
@@ -22,7 +31,7 @@ pub fn run_amen<W: Write, R: Read>(
     if let Some(phrase) = pick_phrase(input, output_terminal, abbrevs, trie)? {
         Ok(phrase)
     } else {
-        Err(Error::new(ErrorKind::Other, "No item selected"))
+        Err(Box::new(AmenError("No item selected")))
     }
 }
 
@@ -34,12 +43,14 @@ fn collect_abbrevs_to_trie(abbrevs: &HashMap<String, Abbrev>) -> Trie<u8> {
     trie_builder.build()
 }
 
+type Type = trie_rs::Trie<u8>;
+
 fn pick_phrase<W: Write, R: Read>(
     input: R,
     mut output: W,
-    abbrevs: std::collections::HashMap<String, abbrev::Abbrev>,
-    trie: trie_rs::Trie<u8>,
-) -> Result<Option<String>, std::io::Error> {
+    abbrevs: HashMap<String, Abbrev>,
+    trie: Type,
+) -> Result<Option<&str>, std::io::Error> {
     let mut key_iter = input.keys();
     let mut input_abbrev = String::new();
     Ok(loop {
@@ -58,8 +69,8 @@ fn pick_phrase<W: Write, R: Read>(
                 input_abbrev.pop();
             }
             1 => {
-                let item = abbrevs.get(&input_abbrev).unwrap();
-                break Some(item.phrase.clone());
+                let item = abbrevs.get(&*input_abbrev).unwrap();
+                break Some(item.phrase);
             }
             _ => {
                 write!(
@@ -69,7 +80,7 @@ fn pick_phrase<W: Write, R: Read>(
                     termion::cursor::Goto(1, 1)
                 )?;
                 for abbrev in predicted_abbrevs {
-                    let abbrev_data = &abbrevs.get(&abbrev).unwrap();
+                    let abbrev_data = &abbrevs.get(&*abbrev).unwrap();
                     print_abbrev(&mut output, abbrev_data, &input_abbrev)?;
                     write!(output, "\n\r")?;
                 }
@@ -90,7 +101,7 @@ fn pick_phrase<W: Write, R: Read>(
 
 fn print_abbrev<T: Write>(
     screen: &mut T,
-    abbrev_data: &&abbrev::Abbrev,
+    abbrev_data: &Abbrev,
     input_abbrev: &str,
 ) -> Result<(), std::io::Error> {
     for (i, c) in abbrev_data.phrase.char_indices() {

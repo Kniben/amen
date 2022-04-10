@@ -2,27 +2,27 @@ use amen::run_amen;
 
 #[test]
 fn single_alt_shorted() {
-    assert_eq!(
-        run(b"", &["Long Johnsson"]),
-        Ok("Long Johnsson".to_string())
-    );
+    assert_eq!(run(&["Long Johnsson"], b""), Ok("Long Johnsson"));
 }
+
+// TODO Implement this feature
+// #[test]
+// fn duplicate_phrases_shorted() {
+//     assert_eq!(run(&["pan", "pan"], b""), Ok("pan"));
+// }
 
 #[test]
 fn multi_alts() {
-    assert_eq!(run(b"p", &["foo", "pho"]), Ok("pho".to_string()));
-    assert_eq!(run(b"t", &["police", "potato"]), Ok("potato".to_string()));
-    assert_eq!(
-        run(b"a", &["pan", "police", "potato"]),
-        Ok("pan".to_string())
-    );
+    assert_eq!(run(&["foo", "pho"], b"p"), Ok("pho"));
+    assert_eq!(run(&["police", "potato"], b"t"), Ok("potato"));
+    assert_eq!(run(&["pan", "police", "potato"], b"a"), Ok("pan"));
 }
 
-fn run(key_input: &[u8], phrase_input: &[&str]) -> Result<String, String> {
-    let mut output = vec![];
-    let phrases = phrase_input
-        .iter()
-        .map(|phrase| phrase.to_string())
-        .collect();
-    Ok(run_amen(key_input, &mut output, phrases).map_err(|e| e.to_string())?)
+#[test]
+fn duplicates() {
+    assert_eq!(run(&["paper", "car", "car"], b"c"), Ok("car"));
+}
+
+fn run<'a>(phrases: &'a [&str], key_input: &[u8]) -> Result<&'a str, String> {
+    run_amen(key_input, vec![], phrases).map_err(|e| e.to_string())
 }
