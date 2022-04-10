@@ -2,8 +2,6 @@ use amen::run_amen;
 use nix::unistd::{dup, dup2};
 use std::fs::File;
 use std::os::unix::io::AsRawFd;
-use termion::raw::IntoRawMode;
-use termion::screen::AlternateScreen;
 
 fn main() -> Result<(), std::io::Error> {
     let phrases = read_input_phrases()?;
@@ -12,10 +10,8 @@ fn main() -> Result<(), std::io::Error> {
     let prev_stdout = dup(stdout_fd)?;
     dup2(File::create("/dev/tty")?.as_raw_fd(), stdout_fd)?;
     let tty = &termion::get_tty()?;
-    let screen = AlternateScreen::from(tty);
-    let terminal = screen.into_raw_mode()?;
 
-    let result = run_amen(terminal, phrases)?;
+    let result = run_amen(tty, tty, phrases)?;
 
     dup2(prev_stdout, stdout_fd)?;
 

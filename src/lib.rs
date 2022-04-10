@@ -6,17 +6,20 @@ use trie_rs::{Trie, TrieBuilder};
 mod abbrev;
 
 use crate::abbrev::Abbrev;
-use termion::input::TermReadEventsAndRaw;
-use termion::raw::RawTerminal;
+use termion::raw::IntoRawMode;
 
-pub fn run_amen<T: Write + TermReadEventsAndRaw + Read + Copy>(
-    terminal: RawTerminal<AlternateScreen<T>>,
+pub fn run_amen<W: Write, R: Read>(
+    input: R,
+    output: W,
     phrases: Vec<String>,
 ) -> Result<String, Error> {
+    let screen = AlternateScreen::from(output);
+    let output_terminal = screen.into_raw_mode()?;
+
     let abbrevs = abbrev::assign_abbrevs(phrases);
     let trie = collect_abbrevs_to_trie(&abbrevs);
 
-    if let Some(phrase) = pick_phrase(abbrevs, trie, terminal)? {
+    if let Some(phrase) = pick_phrase(input, output_terminal, abbrevs, trie)? {
         Ok(phrase)
     } else {
         Err(Error::new(ErrorKind::Other, "No item selected"))
@@ -31,12 +34,13 @@ fn collect_abbrevs_to_trie(abbrevs: &HashMap<String, Abbrev>) -> Trie<u8> {
     trie_builder.build()
 }
 
-fn pick_phrase<T: Write + TermReadEventsAndRaw + Read + Copy>(
+fn pick_phrase<W: Write, R: Read>(
+    input: R,
+    mut output: W,
     abbrevs: std::collections::HashMap<String, abbrev::Abbrev>,
     trie: trie_rs::Trie<u8>,
-    mut terminal: RawTerminal<AlternateScreen<T>>,
 ) -> Result<Option<String>, std::io::Error> {
-    let mut keys = terminal.keys();
+    let mut key_iter = input.keys();
     let mut input_abbrev = String::new();
     Ok(loop {
         let predicted_abbrevs = if input_abbrev.is_empty() {
@@ -59,21 +63,21 @@ fn pick_phrase<T: Write + TermReadEventsAndRaw + Read + Copy>(
             }
             _ => {
                 write!(
-                    terminal,
+                    output,
                     "{}{}",
                     termion::clear::All,
                     termion::cursor::Goto(1, 1)
                 )?;
                 for abbrev in predicted_abbrevs {
                     let abbrev_data = &abbrevs.get(&abbrev).unwrap();
-                    print_abbrev(&mut terminal, abbrev_data, &input_abbrev)?;
-                    write!(terminal, "\n\r")?;
+                    print_abbrev(&mut output, abbrev_data, &input_abbrev)?;
+                    write!(output, "\n\r")?;
                 }
-                terminal.flush()?;
+                output.flush()?;
             }
         };
 
-        let key = keys.next().expect("Failed getting next key")?;
+        let key = key_iter.next().expect("Failed getting next key")?;
         match key {
             termion::event::Key::Char(c) => {
                 input_abbrev.push(c);
