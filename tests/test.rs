@@ -11,6 +11,13 @@ fn single_alt_shorted() {
 //     assert_eq!(run(&["pan", "pan"], b""), Ok("pan"));
 // }
 
+// TODO Implement this feature
+// #[test]
+// fn case_insensitive_user_input() {
+//     assert_eq!(run(&["Bear", "cow"], b"b"), Ok("Bear"));
+//     assert_eq!(run(&["eRROR", "Relax"], b"r"), Ok("Relax"));
+// }
+
 #[test]
 fn multi_alts() {
     assert_eq!(run(&["foo", "pho"], b"p"), Ok("pho"));
