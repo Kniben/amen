@@ -17,6 +17,23 @@ impl<'a> Layout<'a> {
         }
     }
 
+    pub fn clear(&self) -> String {
+        if let Some(top) = self.text_positions.values().map(|(_, y)| y).min() {
+            let bot = self.text_positions.values().map(|(_, y)| y).max().unwrap();
+            (*top..=*bot)
+                .map(|i| {
+                    format!(
+                        "{}{}",
+                        termion::cursor::Goto(1, i),
+                        termion::clear::UntilNewline
+                    )
+                })
+                .collect()
+        } else {
+            "".to_string()
+        }
+    }
+
     // TODO Really need to clone?
     pub fn update<I: IntoIterator<Item = &'a str> + Clone>(
         &mut self,

@@ -77,24 +77,11 @@ fn pick_phrase<W: Write, R: Read>(
             }
             1 => {
                 let item = abbrev_phrases.get(&*input_abbrev).unwrap();
+                write!(output, "{}", layout.clear())?;
                 break Some(item.phrase);
             }
             _ => {
-                let predicted_phrases = predicted_abbrevs
-                    .iter()
-                    .map(|abbrev| abbrev_phrases.get(abbrev).unwrap().phrase)
-                    .collect();
-                let eliminated_phrases = phrases.difference(&predicted_phrases);
-
-                // Clear eliminated phrases
-                for phrase in eliminated_phrases {
-                    write!(
-                        output,
-                        "{}{}",
-                        layout.goto_text_position(phrase),
-                        " ".repeat(layout.column_width as usize)
-                    )?;
-                }
+                write!(output, "{}", layout.clear())?;
 
                 for abbrev in predicted_abbrevs.iter() {
                     let abbrev_data = &abbrev_phrases.get(&*abbrev).unwrap();
