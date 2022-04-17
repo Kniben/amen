@@ -195,9 +195,6 @@ wait
 quit
 "
 
-docker ps
-echo
-
 while COMMAND=$(printf "$COMMANDS" | amen)
 do
   if [ "$COMMAND" = "quit" ]
@@ -205,17 +202,12 @@ do
     exit 0
   fi
 
-  if [ "$COMMAND" != "ps" ]
-  then
-    COMMAND="docker $COMMAND "
-    vared -p "> " -c COMMAND
-    clear
-    zsh -c "$COMMAND"
-    echo
-  else
-    clear
-  fi
-
-  docker ps
+  COMMAND="docker $COMMAND "
+  zsh -c "$COMMAND --help"
   echo
+  vared -p "> " -c COMMAND
+  clear
+  zsh -c "$COMMAND"
+  echo
+
 done
