@@ -15,12 +15,20 @@ pub fn run_amen<'a, W: Write, R: Read>(
     output: W,
     phrases: &[&'a str],
     menu_start_row: u16,
+    term_size: (u16, u16),
 ) -> Result<&'a str, AmenError> {
     let abbrev_phrases = abbrev::assign_abbrevs(phrases);
     let trie = collect_abbrevs_to_trie(&abbrev_phrases);
 
-    let pick_phrase = pick_phrase(input, output, abbrev_phrases, trie, menu_start_row)
-        .map_err(|err| AmenError::Internal(Box::new(err)));
+    let pick_phrase = pick_phrase(
+        input,
+        output,
+        abbrev_phrases,
+        trie,
+        menu_start_row,
+        term_size,
+    )
+    .map_err(|err| AmenError::Internal(Box::new(err)));
 
     if let Some(phrase) = pick_phrase? {
         Ok(phrase)
@@ -45,13 +53,14 @@ fn pick_phrase<W: Write, R: Read>(
     abbrev_phrases: HashMap<String, AbbrevPhrase>,
     trie: Type,
     menu_start_row: u16,
+    term_size: (u16, u16),
 ) -> Result<Option<&str>, std::io::Error> {
     let mut key_iter = input.keys();
     let mut input_abbrev = String::new();
 
     let mut layout = layout::Layout::new();
     let phrases: BTreeSet<_> = abbrev_phrases.values().map(|ap| ap.phrase).collect();
-    layout.update(&phrases, phrases.len(), (1, menu_start_row))?;
+    layout.update(&phrases, phrases.len(), (1, menu_start_row), term_size)?;
 
     Ok(loop {
         let predicted_abbrevs: BTreeSet<_> = if input_abbrev.is_empty() {

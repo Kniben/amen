@@ -23,8 +23,8 @@ impl<'a> Layout<'a> {
         texts: &I,
         texts_count: usize,
         origin: (u16, u16),
+        term_size: (u16, u16),
     ) -> Result<(), std::io::Error> {
-        let term_size = termion::terminal_size()?;
         let spacing = 1;
         self.column_width = spacing
             + texts

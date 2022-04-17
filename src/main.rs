@@ -24,8 +24,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     write!(tty, "{}", termion::cursor::Save)?;
 
     let terminal = tty.into_raw_mode()?;
+    let term_size = termion::terminal_size()?;
 
-    let result = run_amen(tty, terminal, phrases, tty.cursor_pos()?.1);
+    let result = run_amen(tty, terminal, phrases, tty.cursor_pos()?.1, term_size);
 
     write!(tty, "{}", termion::cursor::Restore)?;
     write!(tty, "{}", termion::cursor::Show)?;
