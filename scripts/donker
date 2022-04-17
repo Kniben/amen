@@ -1,0 +1,86 @@
+#!/bin/zsh
+
+set -o pipefail
+
+COMMANDS="
+attach
+build
+builder
+buildx
+commit
+compose
+config
+container
+context
+cp
+create
+daemon
+diff
+events
+exec
+export
+help
+history
+image
+images
+import
+info
+inspect
+kill
+load
+login
+logout
+logs
+manifest
+network
+node
+pause
+plugin
+port
+ps
+pull
+push
+rename
+restart
+rmi
+rm
+run
+save
+search
+secret
+service
+stack
+start
+stats
+stop
+swarm
+system
+tag
+top
+trust
+unpause
+update
+version
+volume
+wait
+quit
+"
+
+while COMMAND=$(printf "$COMMANDS" | amen)
+do
+  if [ "$COMMAND" = "quit" ]
+  then
+    exit 0
+  fi
+
+  if [ "$COMMAND" != "status" ]
+  then
+    COMMAND="docker $COMMAND "
+    vared -c COMMAND
+    clear
+    zsh -c "$COMMAND"
+    echo
+  else
+    clear
+  fi
+done

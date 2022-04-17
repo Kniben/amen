@@ -1,0 +1,63 @@
+#!/bin/zsh
+
+set -o pipefail
+
+COMMANDS="add
+bisect
+blame
+branch
+checkout
+cherry-pick
+clean
+commit
+diff
+fetch
+grep
+help
+log
+merge
+mv
+pull
+push
+range-diff
+rebase
+reflog
+remote
+reset
+restore
+revert
+rm
+show
+stash
+status
+submodule
+switch
+tag
+quit
+"
+
+clear
+git status
+echo
+
+while COMMAND=$(printf "$COMMANDS" | amen)
+do
+  if [ "$COMMAND" = "quit" ]
+  then
+    exit 0
+  fi
+
+  if [ "$COMMAND" != "status" ]
+  then
+    COMMAND="git $COMMAND "
+    vared -c COMMAND
+    clear
+    zsh -c "$COMMAND"
+    echo
+  else
+    clear
+  fi
+
+  git status
+  echo
+done
