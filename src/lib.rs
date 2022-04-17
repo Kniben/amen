@@ -129,16 +129,18 @@ fn print_abbrev<T: Write>(
         if abbrev_data.indices.contains(&i) && not_already_typed {
             write!(
                 screen,
-                "{}{}{}",
+                "{}{}{}{}{}",
+                termion::color::Fg(termion::color::Cyan),
                 termion::style::Bold,
                 c,
                 termion::style::Reset,
+                termion::color::Fg(termion::color::Reset)
             )?;
         } else {
             write!(
                 screen,
                 "{}{}{}",
-                termion::color::Fg(termion::color::Blue),
+                termion::color::Fg(termion::color::Magenta),
                 c,
                 termion::color::Fg(termion::color::Reset),
             )?;

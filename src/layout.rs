@@ -25,7 +25,7 @@ impl<'a> Layout<'a> {
         origin: (u16, u16),
         term_size: (u16, u16),
     ) -> Result<(), std::io::Error> {
-        let spacing = 1;
+        let spacing = 2;
         self.column_width = spacing
             + texts
                 .clone()
