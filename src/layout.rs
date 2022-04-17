@@ -45,8 +45,8 @@ impl<'a> Layout<'a> {
 
     fn set_size(&mut self, text_count: usize, term_size: (u16, u16)) {
         let column_count = term_size.0 / self.column_width;
-        let height = 1 + text_count as u16 / column_count;
-        self.size = (column_count, height);
+        let row_count = 1 + text_count as u16 / column_count;
+        self.size = (column_count, row_count);
     }
 
     // TODO Really need to clone?
