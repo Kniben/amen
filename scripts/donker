@@ -76,7 +76,7 @@ do
   if [ "$COMMAND" != "status" ]
   then
     COMMAND="docker $COMMAND "
-    vared -c COMMAND
+    vared -p "> " -c COMMAND
     clear
     zsh -c "$COMMAND"
     echo
