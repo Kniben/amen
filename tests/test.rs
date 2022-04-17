@@ -31,5 +31,5 @@ fn duplicates() {
 }
 
 fn run<'a>(phrases: &'a [&str], key_input: &[u8]) -> Result<&'a str, String> {
-    run_amen(key_input, vec![], phrases).map_err(|e| e.to_string())
+    run_amen(key_input, vec![], phrases, 1).map_err(|e| e.to_string())
 }
