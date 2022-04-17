@@ -6,23 +6,93 @@ COMMANDS="
 attach
 build
 builder
-buildx
+buildx imagetools
+buildx bake
+buildx build
+buildx create
+buildx du
+buildx inspect
+buildx ls
+buildx prune
+buildx rm
+buildx stop
+buildx use
+buildx version
 commit
-compose
-config
-container
-context
+compose build
+compose convert
+compose cp
+compose create
+compose down
+compose events
+compose exec
+compose images
+compose kill
+compose logs
+compose ls
+compose pause
+compose port
+compose ps
+compose pull
+compose push
+compose restart
+compose rm
+compose run
+compose start
+compose stop
+compose top
+compose unpause
+compose up
+compose version
+config create
+config inspect
+config ls
+config rm
+container attach
+container commit
+container cp
+container create
+container diff
+container exec
+container export
+container inspect
+container kill
+container logs
+container ls
+container pause
+container port
+container prune
+container rename
+container restart
+container rm
+container run
+container start
+container stats
+container stop
+container top
+container unpause
+container update
+container wait
 cp
 create
-daemon
 diff
 events
 exec
 export
 help
 history
-image
-images
+image build
+image history
+image import
+image inspect
+image load
+image ls
+image prune
+image pull
+image push
+image rm
+image save
+image tag
 import
 info
 inspect
@@ -31,11 +101,36 @@ load
 login
 logout
 logs
-manifest
-network
-node
+manifest annotate
+manifest create
+manifest inspect
+manifest push
+manifest rm
+network connect
+network create
+network disconnect
+network inspect
+network ls
+network prune
+network rm
+node demote
+node inspect
+node ls
+node promote
+node ps
+node rm
+node update
 pause
-plugin
+plugin create
+plugin disable
+plugin enable
+plugin inspect
+plugin install
+plugin ls
+plugin push
+plugin rm
+plugin set
+plugin upgrade
 port
 ps
 pull
@@ -47,24 +142,61 @@ rm
 run
 save
 search
-secret
-service
-stack
+secret create
+secret inspect
+secret ls
+secret rm
+service create
+service inspect
+service logs
+service ls
+service ps
+service rm
+service rollback
+service scale
+service update
+stack deploy
+stack ls
+stack ps
+stack rm
+stack services
 start
 stats
 stop
-swarm
-system
+swarm ca
+swarm init
+swarm join
+swarm join-token
+swarm leave
+swarm unlock
+swarm unlock-key
+swarm update
+system df
+system events
+system info
+system prune
 tag
 top
-trust
+trust key generate
+trust key load
+trust signer
+trust inspect
+trust revoke
+trust sign
 unpause
 update
 version
-volume
+volume create
+volume inspect
+volume ls
+volume prune
+volume rm
 wait
 quit
 "
+
+docker ps
+echo
 
 while COMMAND=$(printf "$COMMANDS" | amen)
 do
@@ -73,7 +205,7 @@ do
     exit 0
   fi
 
-  if [ "$COMMAND" != "status" ]
+  if [ "$COMMAND" != "ps" ]
   then
     COMMAND="docker $COMMAND "
     vared -p "> " -c COMMAND
@@ -83,4 +215,7 @@ do
   else
     clear
   fi
+
+  docker ps
+  echo
 done
