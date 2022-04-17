@@ -28,6 +28,7 @@ restore
 revert
 rm
 show
+spinoff
 stash
 status
 submodule
