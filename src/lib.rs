@@ -57,13 +57,6 @@ fn pick_phrase<W: Write, R: Read>(
     let phrases: BTreeSet<_> = abbrev_phrases.values().map(|ap| ap.phrase).collect();
     layout.update(&phrases, phrases.len(), (1, menu_start_row))?;
 
-    // Make room for the table of phrases
-    for _ in 0..layout.size.1 {
-        println!();
-    }
-
-    layout.update(&phrases, phrases.len(), (1, layout.size.1 + menu_start_row))?;
-
     Ok(loop {
         let predicted_abbrevs: BTreeSet<_> = if input_abbrev.is_empty() {
             abbrev_phrases.keys().map(|s| s.to_string()).collect()

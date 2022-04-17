@@ -61,16 +61,11 @@ impl<'a> Layout<'a> {
 
         let mut texts_iter = texts.clone().into_iter();
         self.text_positions.clear();
-        for x in 1..=self.size.0 {
-            for y in 1..=self.size.1 {
+        for x in 0..self.size.0 {
+            for y in 0..self.size.1 {
                 if let Some(next) = texts_iter.next() {
-                    self.text_positions.insert(
-                        next,
-                        (
-                            origin.0 + x * self.column_width - self.column_width,
-                            origin.1 + y,
-                        ),
-                    );
+                    self.text_positions
+                        .insert(next, (origin.0 + x * self.column_width, origin.1 + y));
                 } else {
                     return;
                 }
