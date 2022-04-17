@@ -10,12 +10,11 @@ pub struct Layout<'a> {
 
 impl<'a> Layout<'a> {
     pub fn new() -> Self {
-        let new = Self {
+        Self {
             column_width: 0,
             size: (0, 0),
             text_positions: HashMap::new(),
-        };
-        new
+        }
     }
 
     // TODO Really need to clone?

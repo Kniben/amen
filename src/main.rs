@@ -1,9 +1,11 @@
+use amen::error::AmenError;
 use amen::run_amen;
 use nix::unistd::{dup, dup2};
 use std::error::Error;
 use std::fs::File;
 use std::io::Write;
 use std::os::unix::io::AsRawFd;
+use std::process;
 use termion::cursor::DetectCursorPos;
 use termion::raw::IntoRawMode;
 
@@ -30,8 +32,14 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     dup2(prev_stdout, stdout_fd)?;
 
-    println!("{}", result?);
-    Ok(())
+    match result {
+        Ok(phrase) => {
+            println!("{}", phrase);
+            Ok(())
+        }
+        Err(AmenError::NoneSelected) => process::exit(1),
+        Err(AmenError::Internal(error)) => Err(error),
+    }
 }
 
 fn read_input_phrases() -> Result<Vec<String>, Box<dyn Error>> {

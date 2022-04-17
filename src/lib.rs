@@ -1,35 +1,31 @@
+use error::AmenError;
 use std::collections::{BTreeSet, HashMap};
 use std::io::{Read, Write};
 use termion::input::TermRead;
 use trie_rs::{Trie, TrieBuilder};
 
 mod abbrev;
+pub mod error;
 mod layout;
 
 use crate::abbrev::AbbrevPhrase;
-
-#[derive(Debug)]
-struct AmenError<'a>(&'a str);
-impl std::fmt::Display for AmenError<'_> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-impl std::error::Error for AmenError<'_> {}
 
 pub fn run_amen<'a, W: Write, R: Read>(
     input: R,
     output: W,
     phrases: &[&'a str],
     menu_start_row: u16,
-) -> Result<&'a str, Box<dyn std::error::Error>> {
+) -> Result<&'a str, AmenError> {
     let abbrev_phrases = abbrev::assign_abbrevs(phrases);
     let trie = collect_abbrevs_to_trie(&abbrev_phrases);
 
-    if let Some(phrase) = pick_phrase(input, output, abbrev_phrases, trie, menu_start_row)? {
+    let pick_phrase = pick_phrase(input, output, abbrev_phrases, trie, menu_start_row)
+        .map_err(|err| AmenError::Internal(Box::new(err)));
+
+    if let Some(phrase) = pick_phrase? {
         Ok(phrase)
     } else {
-        Err(Box::new(AmenError("No item selected")))
+        Err(AmenError::NoneSelected)
     }
 }
 
