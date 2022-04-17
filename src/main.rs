@@ -2,9 +2,10 @@ use amen::run_amen;
 use nix::unistd::{dup, dup2};
 use std::error::Error;
 use std::fs::File;
+use std::io::Write;
 use std::os::unix::io::AsRawFd;
+use termion::cursor::DetectCursorPos;
 use termion::raw::IntoRawMode;
-use termion::screen::AlternateScreen;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let phrases = read_input_phrases()?;
@@ -12,18 +13,24 @@ fn main() -> Result<(), Box<dyn Error>> {
     let stdout_fd = std::io::stdout().as_raw_fd();
     let prev_stdout = dup(stdout_fd)?;
     dup2(File::create("/dev/tty")?.as_raw_fd(), stdout_fd)?;
-    let tty = &termion::get_tty()?;
 
     let phrases = &*phrases.iter().map(AsRef::as_ref).collect::<Vec<_>>();
 
-    let screen = AlternateScreen::from(tty);
-    let terminal = screen.into_raw_mode()?;
+    let mut tty = &termion::get_tty()?;
 
-    let result = run_amen(tty, terminal, phrases)?;
+    write!(tty, "{}", termion::cursor::Hide)?;
+    write!(tty, "{}", termion::cursor::Save)?;
+
+    let terminal = tty.into_raw_mode()?;
+
+    let result = run_amen(tty, terminal, phrases, tty.cursor_pos()?.1);
+
+    write!(tty, "{}", termion::cursor::Restore)?;
+    write!(tty, "{}", termion::cursor::Show)?;
 
     dup2(prev_stdout, stdout_fd)?;
 
-    println!("{}", result);
+    println!("{}", result?);
     Ok(())
 }
 

@@ -1,11 +1,12 @@
-use std::collections::HashMap;
+use std::collections::{BTreeSet, HashMap};
 use std::io::{Read, Write};
 use termion::input::TermRead;
 use trie_rs::{Trie, TrieBuilder};
 
 mod abbrev;
+mod layout;
 
-use crate::abbrev::Abbrev;
+use crate::abbrev::AbbrevPhrase;
 
 #[derive(Debug)]
 struct AmenError<'a>(&'a str);
@@ -20,18 +21,19 @@ pub fn run_amen<'a, W: Write, R: Read>(
     input: R,
     output: W,
     phrases: &[&'a str],
+    menu_start_row: u16,
 ) -> Result<&'a str, Box<dyn std::error::Error>> {
-    let abbrevs = abbrev::assign_abbrevs(phrases);
-    let trie = collect_abbrevs_to_trie(&abbrevs);
+    let abbrev_phrases = abbrev::assign_abbrevs(phrases);
+    let trie = collect_abbrevs_to_trie(&abbrev_phrases);
 
-    if let Some(phrase) = pick_phrase(input, output, abbrevs, trie)? {
+    if let Some(phrase) = pick_phrase(input, output, abbrev_phrases, trie, menu_start_row)? {
         Ok(phrase)
     } else {
         Err(Box::new(AmenError("No item selected")))
     }
 }
 
-fn collect_abbrevs_to_trie(abbrevs: &HashMap<String, Abbrev>) -> Trie<u8> {
+fn collect_abbrevs_to_trie(abbrevs: &HashMap<String, AbbrevPhrase>) -> Trie<u8> {
     let mut trie_builder = TrieBuilder::new();
     for (abbrev, _) in abbrevs.iter() {
         trie_builder.push(abbrev);
@@ -44,42 +46,64 @@ type Type = trie_rs::Trie<u8>;
 fn pick_phrase<W: Write, R: Read>(
     input: R,
     mut output: W,
-    abbrevs: HashMap<String, Abbrev>,
+    abbrev_phrases: HashMap<String, AbbrevPhrase>,
     trie: Type,
+    menu_start_row: u16,
 ) -> Result<Option<&str>, std::io::Error> {
     let mut key_iter = input.keys();
     let mut input_abbrev = String::new();
+
+    let mut layout = layout::Layout::new();
+    let phrases: BTreeSet<_> = abbrev_phrases.values().map(|ap| ap.phrase).collect();
+    layout.update(&phrases, phrases.len(), (1, menu_start_row))?;
+
+    // Make room for the table of phrases
+    for _ in 0..layout.size.1 {
+        println!();
+    }
+
+    layout.update(&phrases, phrases.len(), (1, layout.size.1 + menu_start_row))?;
+
     Ok(loop {
-        let predicted_abbrevs = if input_abbrev.is_empty() {
-            let mut abbrevs: Vec<String> = abbrevs.keys().map(|s| s.to_string()).collect();
-            abbrevs.sort();
-            abbrevs
+        let predicted_abbrevs: BTreeSet<_> = if input_abbrev.is_empty() {
+            abbrev_phrases.keys().map(|s| s.to_string()).collect()
         } else {
             trie.predictive_search(&input_abbrev)
                 .into_iter()
                 .map(|u8s| std::str::from_utf8(&u8s).unwrap().to_string())
-                .collect::<Vec<_>>()
+                .collect()
         };
         match predicted_abbrevs.len() {
             0 => {
                 input_abbrev.pop();
             }
             1 => {
-                let item = abbrevs.get(&*input_abbrev).unwrap();
+                let item = abbrev_phrases.get(&*input_abbrev).unwrap();
                 break Some(item.phrase);
             }
             _ => {
-                write!(
-                    output,
-                    "{}{}",
-                    termion::clear::All,
-                    termion::cursor::Goto(1, 1)
-                )?;
-                for abbrev in predicted_abbrevs {
-                    let abbrev_data = &abbrevs.get(&*abbrev).unwrap();
-                    print_abbrev(&mut output, abbrev_data, &input_abbrev)?;
-                    write!(output, "\n\r")?;
+                let predicted_phrases = predicted_abbrevs
+                    .iter()
+                    .map(|abbrev| abbrev_phrases.get(abbrev).unwrap().phrase)
+                    .collect();
+                let eliminated_phrases = phrases.difference(&predicted_phrases);
+
+                // Clear eliminated phrases
+                for phrase in eliminated_phrases {
+                    write!(
+                        output,
+                        "{}{}",
+                        layout.goto_text_position(phrase),
+                        " ".repeat(layout.column_width as usize)
+                    )?;
                 }
+
+                for abbrev in predicted_abbrevs.iter() {
+                    let abbrev_data = &abbrev_phrases.get(&*abbrev).unwrap();
+                    write!(output, "{}", layout.goto_text_position(abbrev_data.phrase))?;
+                    print_abbrev(&mut output, abbrev_data, &input_abbrev)?;
+                }
+
                 output.flush()?;
             }
         };
@@ -97,7 +121,7 @@ fn pick_phrase<W: Write, R: Read>(
 
 fn print_abbrev<T: Write>(
     screen: &mut T,
-    abbrev_data: &Abbrev,
+    abbrev_data: &AbbrevPhrase,
     input_abbrev: &str,
 ) -> Result<(), std::io::Error> {
     for (i, c) in abbrev_data.phrase.char_indices() {
@@ -108,8 +132,8 @@ fn print_abbrev<T: Write>(
             write!(
                 screen,
                 "{}{}{}{}{}",
-                termion::color::Fg(termion::color::LightCyan),
                 termion::style::Bold,
+                termion::color::Fg(termion::color::LightBlue),
                 c,
                 termion::style::Reset,
                 termion::color::Fg(termion::color::Reset),
