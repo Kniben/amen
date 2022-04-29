@@ -20,16 +20,14 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let mut tty = &termion::get_tty()?;
 
-    write!(tty, "{}", termion::cursor::Hide)?;
-    write!(tty, "{}", termion::cursor::Save)?;
+    write!(tty, "{}{}", termion::cursor::Hide, termion::cursor::Save)?;
 
     let terminal = tty.into_raw_mode()?;
     let term_size = termion::terminal_size()?;
 
     let result = run_amen(tty, terminal, phrases, tty.cursor_pos()?.1, term_size);
 
-    write!(tty, "{}", termion::cursor::Restore)?;
-    write!(tty, "{}", termion::cursor::Show)?;
+    write!(tty, "{}{}", termion::cursor::Restore, termion::cursor::Show)?;
 
     dup2(prev_stdout, stdout_fd)?;
 

@@ -98,7 +98,12 @@ fn pick_phrase<W: Write, R: Read>(
             termion::event::Key::Char(c) => {
                 input_abbrev.push(c);
             }
-            termion::event::Key::Esc => break None,
+            termion::event::Key::Esc => 
+                if input_abbrev.is_empty() {
+                    break None;
+                } else {
+                    input_abbrev.clear();
+                }
             _ => {}
         }
     })
