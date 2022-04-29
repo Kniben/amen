@@ -3,6 +3,7 @@ use layout::Layout;
 use std::collections::{BTreeSet, HashMap};
 use std::io::{Read, Write};
 use termion::input::TermRead;
+use termion::{color, event, style};
 use trie_rs::{Trie, TrieBuilder};
 
 mod abbrev;
@@ -94,10 +95,10 @@ fn pick_phrase<'a, W: Write, R: Read>(
 
         let key = key_iter.next().expect("Failed getting next key")?;
         match key {
-            termion::event::Key::Char(c) => {
+            event::Key::Char(c) => {
                 input_abbrev.push(c);
             }
-            termion::event::Key::Esc => {
+            event::Key::Esc => {
                 if input_abbrev.is_empty() {
                     break None;
                 } else {
@@ -122,19 +123,19 @@ fn print_abbrev<T: Write>(
             write!(
                 screen,
                 "{}{}{}{}{}",
-                termion::color::Fg(termion::color::Cyan),
-                termion::style::Bold,
+                color::Fg(color::Cyan),
+                style::Bold,
                 c,
-                termion::style::Reset,
-                termion::color::Fg(termion::color::Reset)
+                style::Reset,
+                color::Fg(color::Reset)
             )?;
         } else {
             write!(
                 screen,
                 "{}{}{}",
-                termion::color::Fg(termion::color::Magenta),
+                color::Fg(color::Magenta),
                 c,
-                termion::color::Fg(termion::color::Reset),
+                color::Fg(color::Reset),
             )?;
         };
     }

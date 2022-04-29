@@ -8,31 +8,33 @@ use std::os::unix::io::AsRawFd;
 use std::process;
 use termion::cursor::DetectCursorPos;
 use termion::raw::IntoRawMode;
+use termion::{cursor, get_tty, scroll, terminal_size};
 
 fn main() -> Result<(), Box<dyn Error>> {
     let phrases = read_input_phrases()?;
+    let phrases = &*phrases.iter().map(AsRef::as_ref).collect::<Vec<_>>();
 
     let stdout_fd = std::io::stdout().as_raw_fd();
     let prev_stdout = dup(stdout_fd)?;
     dup2(File::create("/dev/tty")?.as_raw_fd(), stdout_fd)?;
 
-    let phrases = &*phrases.iter().map(AsRef::as_ref).collect::<Vec<_>>();
-
-    let mut tty = &termion::get_tty()?;
+    let mut tty = &get_tty()?;
     let terminal = tty.into_raw_mode()?;
-    let term_size = termion::terminal_size()?;
+
+    let term_size = terminal_size()?;
     let mut layout = create_layout(phrases, term_size)?;
 
-    write!(tty, "{}{}", termion::cursor::Hide, termion::cursor::Save)?;
     let remaining_lines = term_size.1 - tty.cursor_pos()?.1;
     let scroll_amount = layout.size.1 - remaining_lines.min(layout.size.1);
     layout.offset((0, tty.cursor_pos()?.1 - scroll_amount));
-    write!(tty, "{}", termion::scroll::Up(scroll_amount))?;
+
+    write!(tty, "{}{}", cursor::Hide, cursor::Save)?;
+    write!(tty, "{}", scroll::Up(scroll_amount))?;
 
     let result = run_amen(tty, terminal, phrases, &layout);
 
-    write!(tty, "{}", termion::scroll::Down(scroll_amount))?;
-    write!(tty, "{}{}", termion::cursor::Restore, termion::cursor::Show)?;
+    write!(tty, "{}", scroll::Down(scroll_amount))?;
+    write!(tty, "{}{}", cursor::Restore, cursor::Show)?;
 
     dup2(prev_stdout, stdout_fd)?;
 
