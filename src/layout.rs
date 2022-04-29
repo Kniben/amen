@@ -34,25 +34,25 @@ impl<'a> Layout<'a> {
         }
     }
 
-    // TODO Really need to clone?
-    pub fn update<I: IntoIterator<Item = &'a str> + Clone>(
+    pub fn update(
         &mut self,
-        texts: &I,
+        texts: &[&'a str],
         texts_count: usize,
-        origin: (u16, u16),
         term_size: (u16, u16),
     ) -> Result<(), std::io::Error> {
         let spacing = 2;
-        self.column_width = spacing
-            + texts
-                .clone()
-                .into_iter()
-                .map(|text| text.len())
-                .max()
-                .unwrap() as u16;
+        self.column_width =
+            spacing + texts.into_iter().map(|text| text.len()).max().unwrap() as u16;
         self.set_size(texts_count, term_size);
-        self.set_text_positions(texts, origin);
+        self.set_text_positions(texts);
         Ok(())
+    }
+
+    pub fn offset(&mut self, offset: (u16, u16)) {
+        for text_pos in self.text_positions.values_mut() {
+            text_pos.0 += offset.0;
+            text_pos.1 += offset.1;
+        }
     }
 
     pub fn goto_text_position(&self, text: &str) -> Goto {
@@ -66,12 +66,7 @@ impl<'a> Layout<'a> {
         self.size = (column_count, row_count);
     }
 
-    // TODO Really need to clone?
-    fn set_text_positions<I: IntoIterator<Item = &'a str> + Clone>(
-        &mut self,
-        texts: &I,
-        origin: (u16, u16),
-    ) {
+    fn set_text_positions(&mut self, texts: &[&'a str]) {
         // TODO Shorten texts that are too long
         // TODO Only display part of texts when too many to fit half a screen
 
@@ -80,8 +75,7 @@ impl<'a> Layout<'a> {
         for x in 0..self.size.0 {
             for y in 0..self.size.1 {
                 if let Some(next) = texts_iter.next() {
-                    self.text_positions
-                        .insert(next, (origin.0 + x * self.column_width, origin.1 + y));
+                    self.text_positions.insert(next, (x * self.column_width, y));
                 } else {
                     return;
                 }

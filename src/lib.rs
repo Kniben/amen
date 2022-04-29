@@ -1,4 +1,5 @@
 use error::AmenError;
+use layout::Layout;
 use std::collections::{BTreeSet, HashMap};
 use std::io::{Read, Write};
 use termion::input::TermRead;
@@ -10,25 +11,28 @@ mod layout;
 
 use crate::abbrev::AbbrevPhrase;
 
+pub fn create_layout<'a>(
+    phrases: &[&'a str],
+    term_size: (u16, u16),
+) -> Result<layout::Layout<'a>, AmenError> {
+    let mut layout = layout::Layout::new();
+    layout
+        .update(phrases, phrases.len(), term_size)
+        .map_err(|err| AmenError::Internal(Box::new(err)))?;
+    Ok(layout)
+}
+
 pub fn run_amen<'a, W: Write, R: Read>(
     input: R,
     output: W,
     phrases: &[&'a str],
-    menu_start_row: u16,
-    term_size: (u16, u16),
+    layout: &Layout,
 ) -> Result<&'a str, AmenError> {
     let abbrev_phrases = abbrev::assign_abbrevs(phrases);
     let trie = collect_abbrevs_to_trie(&abbrev_phrases);
 
-    let pick_phrase = pick_phrase(
-        input,
-        output,
-        abbrev_phrases,
-        trie,
-        menu_start_row,
-        term_size,
-    )
-    .map_err(|err| AmenError::Internal(Box::new(err)));
+    let pick_phrase = pick_phrase(input, output, abbrev_phrases, trie, layout)
+        .map_err(|err| AmenError::Internal(Box::new(err)));
 
     if let Some(phrase) = pick_phrase? {
         Ok(phrase)
@@ -47,20 +51,15 @@ fn collect_abbrevs_to_trie(abbrevs: &HashMap<String, AbbrevPhrase>) -> Trie<u8> 
 
 type Type = trie_rs::Trie<u8>;
 
-fn pick_phrase<W: Write, R: Read>(
+fn pick_phrase<'a, W: Write, R: Read>(
     input: R,
     mut output: W,
-    abbrev_phrases: HashMap<String, AbbrevPhrase>,
+    abbrev_phrases: HashMap<String, AbbrevPhrase<'a>>,
     trie: Type,
-    menu_start_row: u16,
-    term_size: (u16, u16),
-) -> Result<Option<&str>, std::io::Error> {
+    layout: &Layout,
+) -> Result<Option<&'a str>, std::io::Error> {
     let mut key_iter = input.keys();
     let mut input_abbrev = String::new();
-
-    let mut layout = layout::Layout::new();
-    let phrases: BTreeSet<_> = abbrev_phrases.values().map(|ap| ap.phrase).collect();
-    layout.update(&phrases, phrases.len(), (1, menu_start_row), term_size)?;
 
     Ok(loop {
         let predicted_abbrevs: BTreeSet<_> = if input_abbrev.is_empty() {
@@ -98,12 +97,13 @@ fn pick_phrase<W: Write, R: Read>(
             termion::event::Key::Char(c) => {
                 input_abbrev.push(c);
             }
-            termion::event::Key::Esc => 
+            termion::event::Key::Esc => {
                 if input_abbrev.is_empty() {
                     break None;
                 } else {
                     input_abbrev.clear();
                 }
+            }
             _ => {}
         }
     })

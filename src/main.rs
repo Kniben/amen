@@ -1,5 +1,5 @@
 use amen::error::AmenError;
-use amen::run_amen;
+use amen::{create_layout, run_amen};
 use nix::unistd::{dup, dup2};
 use std::error::Error;
 use std::fs::File;
@@ -19,14 +19,19 @@ fn main() -> Result<(), Box<dyn Error>> {
     let phrases = &*phrases.iter().map(AsRef::as_ref).collect::<Vec<_>>();
 
     let mut tty = &termion::get_tty()?;
-
-    write!(tty, "{}{}", termion::cursor::Hide, termion::cursor::Save)?;
-
     let terminal = tty.into_raw_mode()?;
     let term_size = termion::terminal_size()?;
+    let mut layout = create_layout(phrases, term_size)?;
 
-    let result = run_amen(tty, terminal, phrases, tty.cursor_pos()?.1, term_size);
+    write!(tty, "{}{}", termion::cursor::Hide, termion::cursor::Save)?;
+    let remaining_lines = term_size.1 - tty.cursor_pos()?.1;
+    let scroll_amount = layout.size.1 - remaining_lines.min(layout.size.1);
+    layout.offset((0, tty.cursor_pos()?.1 - scroll_amount));
+    write!(tty, "{}", termion::scroll::Up(scroll_amount))?;
 
+    let result = run_amen(tty, terminal, phrases, &layout);
+
+    write!(tty, "{}", termion::scroll::Down(scroll_amount))?;
     write!(tty, "{}{}", termion::cursor::Restore, termion::cursor::Show)?;
 
     dup2(prev_stdout, stdout_fd)?;

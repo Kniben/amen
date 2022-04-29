@@ -1,3 +1,4 @@
+use amen::create_layout;
 use amen::run_amen;
 
 #[test]
@@ -31,5 +32,6 @@ fn duplicates() {
 }
 
 fn run<'a>(phrases: &'a [&str], key_input: &[u8]) -> Result<&'a str, String> {
-    run_amen(key_input, vec![], phrases, 1, (100, 100)).map_err(|e| e.to_string())
+    let layout = create_layout(phrases, (100, 100)).map_err(|e| e.to_string())?;
+    run_amen(key_input, vec![], phrases, &layout).map_err(|e| e.to_string())
 }
