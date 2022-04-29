@@ -1,5 +1,6 @@
 use amen::error::AmenError;
-use amen::{create_layout, run_amen};
+use amen::layout::Layout;
+use amen::run_amen;
 use nix::unistd::{dup, dup2};
 use std::error::Error;
 use std::fs::File;
@@ -22,11 +23,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     let terminal = tty.into_raw_mode()?;
 
     let term_size = terminal_size()?;
-    let mut layout = create_layout(phrases, term_size)?;
+    let mut layout = Layout::new(phrases, term_size);
 
     let remaining_lines = term_size.1 - tty.cursor_pos()?.1;
     let scroll_amount = layout.size.1 - remaining_lines.min(layout.size.1);
-    layout.offset((0, tty.cursor_pos()?.1 - scroll_amount));
+    layout.offset((0, tty.cursor_pos()?.1 - scroll_amount - 1));
 
     write!(tty, "{}{}", cursor::Hide, cursor::Save)?;
     write!(tty, "{}", scroll::Up(scroll_amount))?;

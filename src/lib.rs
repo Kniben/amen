@@ -8,20 +8,9 @@ use trie_rs::{Trie, TrieBuilder};
 
 mod abbrev;
 pub mod error;
-mod layout;
+pub mod layout;
 
 use crate::abbrev::AbbrevPhrase;
-
-pub fn create_layout<'a>(
-    phrases: &[&'a str],
-    term_size: (u16, u16),
-) -> Result<layout::Layout<'a>, AmenError> {
-    let mut layout = layout::Layout::new();
-    layout
-        .update(phrases, phrases.len(), term_size)
-        .map_err(|err| AmenError::Internal(Box::new(err)))?;
-    Ok(layout)
-}
 
 pub fn run_amen<'a, W: Write, R: Read>(
     input: R,

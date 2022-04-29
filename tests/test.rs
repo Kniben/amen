@@ -1,5 +1,4 @@
-use amen::create_layout;
-use amen::run_amen;
+use amen::{layout::Layout, run_amen};
 
 #[test]
 fn single_alt_shorted() {
@@ -32,6 +31,9 @@ fn duplicates() {
 }
 
 fn run<'a>(phrases: &'a [&str], key_input: &[u8]) -> Result<&'a str, String> {
-    let layout = create_layout(phrases, (100, 100)).map_err(|e| e.to_string())?;
+    let layout = {
+        let term_size = (100, 100);
+        Layout::new(phrases, term_size)
+    };
     run_amen(key_input, vec![], phrases, &layout).map_err(|e| e.to_string())
 }
