@@ -13,6 +13,13 @@ fn duplicates() {
 }
 
 #[test]
+fn branch_off() {
+    assert_eq!(run(&["fetch", "reflog", "revert"], b"f"), Ok("fetch"));
+    assert_eq!(run(&["fetch", "reflog", "revert"], b"rf"), Ok("reflog"));
+    assert_eq!(run(&["fetch", "reflog", "revert"], b"rv"), Ok("revert"));
+}
+
+#[test]
 fn prefix() {
     assert_eq!(run(&["santa", "santa claus"], b"sa"), Ok("santa"));
 }

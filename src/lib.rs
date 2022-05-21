@@ -4,7 +4,6 @@ use std::collections::{BTreeSet, HashMap};
 use std::io::{Read, Write};
 use termion::input::TermRead;
 use termion::{color, event, style};
-use trie_rs::{Trie, TrieBuilder};
 
 mod abbrev;
 pub mod error;
@@ -19,9 +18,8 @@ pub fn run_amen<'a, W: Write, R: Read>(
     layout: &Layout,
 ) -> Result<&'a str, AmenError> {
     let abbrev_phrases = abbrev::assign_abbrevs(phrases);
-    let trie = collect_abbrevs_to_trie(&abbrev_phrases);
 
-    let pick_phrase = pick_phrase(input, output, abbrev_phrases, trie, layout)
+    let pick_phrase = pick_phrase(input, output, abbrev_phrases, layout)
         .map_err(|err| AmenError::Internal(Box::new(err)));
 
     if let Some(phrase) = pick_phrase? {
@@ -31,21 +29,10 @@ pub fn run_amen<'a, W: Write, R: Read>(
     }
 }
 
-fn collect_abbrevs_to_trie(abbrevs: &HashMap<String, AbbrevPhrase>) -> Trie<u8> {
-    let mut trie_builder = TrieBuilder::new();
-    for (abbrev, _) in abbrevs.iter() {
-        trie_builder.push(abbrev);
-    }
-    trie_builder.build()
-}
-
-type Type = trie_rs::Trie<u8>;
-
 fn pick_phrase<'a, W: Write, R: Read>(
     input: R,
     mut output: W,
     abbrev_phrases: HashMap<String, AbbrevPhrase<'a>>,
-    trie: Type,
     layout: &Layout,
 ) -> Result<Option<&'a str>, std::io::Error> {
     let mut key_iter = input.keys();
@@ -55,9 +42,10 @@ fn pick_phrase<'a, W: Write, R: Read>(
         let predicted_abbrevs: BTreeSet<_> = if input_abbrev.is_empty() {
             abbrev_phrases.keys().map(|s| s.to_string()).collect()
         } else {
-            trie.predictive_search(&input_abbrev)
-                .into_iter()
-                .map(|u8s| std::str::from_utf8(&u8s).unwrap().to_string())
+            abbrev_phrases
+                .keys()
+                .filter(|s| s.starts_with(&input_abbrev))
+                .map(|s| s.to_string())
                 .collect()
         };
         match predicted_abbrevs.len() {

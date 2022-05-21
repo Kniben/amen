@@ -27,44 +27,7 @@ pub fn assign_abbrevs<'a>(phrases: &[&'a str]) -> HashMap<String, AbbrevPhrase<'
         let char_occurrences =
             count_char_occurrences(char_phrase_pairs.iter().map(|(char, _phrase)| *char));
 
-        for (occurred_char, occurrences) in char_occurrences {
-            match occurrences {
-                1 => {
-                    let phrase = char_phrase_pairs
-                        .iter()
-                        .find(|(char, _phrase)| *char == occurred_char)
-                        .map(|(_char, phrase)| **phrase)
-                        .unwrap();
-
-                    let entry = abbrev_by_phrase.entry(phrase).or_insert(AbbrevPhrase {
-                        phrase,
-                        abbrev: String::new(),
-                        indices: vec![],
-                    });
-                    (*entry).abbrev.push(occurred_char);
-                    (*entry).indices.push(col);
-                    remaining_phrases.remove(&phrase);
-                }
-                _ => {
-                    let terminated_phrase = char_phrase_pairs
-                        .iter()
-                        .filter(|(char, _phrase)| *char == occurred_char)
-                        .map(|(_char, phrase)| **phrase)
-                        .find(|phrase| phrase.len() == col + 1);
-
-                    if let Some(phrase) = terminated_phrase {
-                        let entry = abbrev_by_phrase.entry(phrase).or_insert(AbbrevPhrase {
-                            phrase,
-                            abbrev: String::new(),
-                            indices: vec![],
-                        });
-                        (*entry).abbrev.push(occurred_char);
-                        (*entry).indices.push(col);
-                        remaining_phrases.remove(&phrase);
-                    }
-                }
-            }
-        }
+        // TODO implement this,
     }
 
     abbrev_by_phrase
