@@ -9,7 +9,7 @@ use std::os::unix::io::AsRawFd;
 use std::process;
 use termion::cursor::DetectCursorPos;
 use termion::raw::IntoRawMode;
-use termion::{cursor, get_tty, scroll, terminal_size};
+use termion::{cursor, get_tty, terminal_size};
 
 fn main() -> Result<(), Box<dyn Error>> {
     let phrases = read_input_phrases()?;
@@ -27,14 +27,10 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let remaining_lines = term_size.1 - tty.cursor_pos()?.1;
     let scroll_amount = layout.size.1 - remaining_lines.min(layout.size.1);
-    layout.offset((0, tty.cursor_pos()?.1 - scroll_amount - 1));
+    layout.offset((0, tty.cursor_pos()?.1 - scroll_amount));
 
     write!(tty, "{}{}", cursor::Hide, cursor::Save)?;
-    write!(tty, "{}", scroll::Up(scroll_amount))?;
-
     let result = run_amen(tty, terminal, phrases, &layout);
-
-    write!(tty, "{}", scroll::Down(scroll_amount))?;
     write!(tty, "{}{}", cursor::Restore, cursor::Show)?;
 
     dup2(prev_stdout, stdout_fd)?;
