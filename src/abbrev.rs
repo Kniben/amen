@@ -1,64 +1,83 @@
-use std::collections::HashMap;
-use trie_rs::TrieBuilder;
+use std::collections::{HashMap, HashSet};
 
+#[derive(Debug)]
 pub struct AbbrevPhrase<'a> {
     pub phrase: &'a str,
     pub abbrev: String,
     pub indices: Vec<usize>,
 }
 
-pub fn assign_abbrevs<'a>(all_options: &[&'a str]) -> HashMap<String, AbbrevPhrase<'a>> {
-    let all_options_trie = copy_to_trie(all_options);
-    let mut items_by_abbrev = HashMap::new();
-    let count = all_options.len();
+pub fn assign_abbrevs<'a>(phrases: &[&'a str]) -> HashMap<String, AbbrevPhrase<'a>> {
+    let mut abbrev_by_phrase = HashMap::new();
 
-    for original in all_options {
-        let (abbrev, indices) = assign_abbrev_indices(original, &all_options_trie, count);
-        items_by_abbrev.insert(
-            abbrev.clone(),
-            AbbrevPhrase {
-                phrase: original,
-                abbrev,
-                indices,
-            },
-        );
-    }
-    items_by_abbrev
-}
+    let max_len = phrases
+        .iter()
+        .fold(0, |max_len, phrase| max_len.max(phrase.len()));
 
-fn copy_to_trie(items: &[&str]) -> trie_rs::Trie<u8> {
-    let mut trie_builder = TrieBuilder::new();
-    for item in items.iter() {
-        trie_builder.push(item);
-    }
-    trie_builder.build()
-}
+    let mut remaining_phrases = phrases.into_iter().collect::<HashSet<_>>();
 
-fn assign_abbrev_indices(
-    text: &str,
-    all_texts: &trie_rs::Trie<u8>,
-    count: usize,
-) -> (String, Vec<usize>) {
-    let mut abbrev = String::new();
-    let mut indices = vec![];
-    let mut prev_matches = count;
-    for i in 0..text.len() {
-        let query = &text[..=i];
-        let search = all_texts.predictive_search(query);
-        let matches: Vec<_> = search
-            .iter()
-            .map(|u8s| std::str::from_utf8(u8s).unwrap())
-            .collect();
+    for col in 0..max_len {
+        let char_phrase_pairs = remaining_phrases
+            .clone()
+            .into_iter()
+            .filter_map(|phrase| phrase.chars().nth(col).map(|char| (char, phrase)))
+            .filter(|(char, _phrase)| char != &' ')
+            .collect::<Vec<_>>();
 
-        if matches.len() < prev_matches {
-            use std::fmt::Write;
-            indices.push(i);
-            write!(abbrev, "{}", &text[i..(i + 1)]).unwrap();
-        } else if matches.is_empty() {
-            break;
+        let char_occurrences =
+            count_char_occurrences(char_phrase_pairs.iter().map(|(char, _phrase)| *char));
+
+        for (occurred_char, occurrences) in char_occurrences {
+            match occurrences {
+                1 => {
+                    let phrase = char_phrase_pairs
+                        .iter()
+                        .find(|(char, _phrase)| *char == occurred_char)
+                        .map(|(_char, phrase)| **phrase)
+                        .unwrap();
+
+                    let entry = abbrev_by_phrase.entry(phrase).or_insert(AbbrevPhrase {
+                        phrase,
+                        abbrev: String::new(),
+                        indices: vec![],
+                    });
+                    (*entry).abbrev.push(occurred_char);
+                    (*entry).indices.push(col);
+                    remaining_phrases.remove(&phrase);
+                }
+                _ => {
+                    let terminated_phrase = char_phrase_pairs
+                        .iter()
+                        .filter(|(char, _phrase)| *char == occurred_char)
+                        .map(|(_char, phrase)| **phrase)
+                        .find(|phrase| phrase.len() == col + 1);
+
+                    if let Some(phrase) = terminated_phrase {
+                        let entry = abbrev_by_phrase.entry(phrase).or_insert(AbbrevPhrase {
+                            phrase,
+                            abbrev: String::new(),
+                            indices: vec![],
+                        });
+                        (*entry).abbrev.push(occurred_char);
+                        (*entry).indices.push(col);
+                        remaining_phrases.remove(&phrase);
+                    }
+                }
+            }
         }
-
-        prev_matches = matches.len();
     }
-    (abbrev, indices)
+
+    abbrev_by_phrase
+        .into_values()
+        .map(|abbrev_phrase| (abbrev_phrase.abbrev.clone(), abbrev_phrase))
+        .collect()
+}
+
+fn count_char_occurrences(chars: impl Iterator<Item = char>) -> HashMap<char, u32> {
+    let mut occurences = HashMap::new();
+    for char in chars {
+        let entry = occurences.entry(char).or_insert(0);
+        *entry += 1;
+    }
+    occurences
 }
