@@ -15,7 +15,7 @@ Usage example:
  [![asciicast](doc/amen.gif)](doc/amen.gif)
  
 More advances usage (a git client):
- [![asciicast](doc/amen.gif)](doc/amen.gif)
+ [![asciicast](doc/gitler.gif)](doc/gitler.gif)
 
 # Installing
 
