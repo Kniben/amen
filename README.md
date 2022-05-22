@@ -12,10 +12,10 @@ An interactive Unix-based terminal program that lets you select items from a lis
 Inspired by the amazing [fzf](https://github.com/junegunn/fzf).
 
 ## Usage example
- <img src="doc/amen.gif" width="200" />
+ <img src="doc/amen.gif" width="600" />
  
 ## More advances usage (a git client):
- <img src="doc/gitler.gif" width="200" />
+ <img src="doc/gitler.gif" width="600" />
 
 # Installing
 
