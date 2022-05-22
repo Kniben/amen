@@ -11,10 +11,10 @@ An interactive Unix-based terminal program that lets you select items from a lis
 
 Inspired by the amazing [fzf](https://github.com/junegunn/fzf).
 
-Usage example:
+## Usage example
  [![asciicast](doc/amen.gif)](doc/amen.gif)
  
-More advances usage (a git client):
+## More advances usage (a git client):
  [![asciicast](doc/gitler.gif)](doc/gitler.gif)
 
 # Installing
