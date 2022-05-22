@@ -1,5 +1,10 @@
 [package]
 name = "amen"
+description = "A CLI menu tool utilizing abbreviations"
+homepage = "https://github.com/Kniben/amen"
+repository = "https://github.com/Kniben/amen.git"
+license = "MIT"
+authors = ["alltidsemester <alltidsemester+git@pm.me>"]
 version = "0.0.1"
 edition = "2021"
 
