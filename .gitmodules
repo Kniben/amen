@@ -1,0 +1,3 @@
+[submodule "amen-aur"]
+	path = amen-aur
+	url = ssh://aur@aur.archlinux.org/amen.git
