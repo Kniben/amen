@@ -14,7 +14,7 @@ Inspired by the amazing [fzf](https://github.com/junegunn/fzf).
 ## Usage example
  <img src="doc/amen.gif" width="600" />
  
-## More advances usage (a git client):
+## More advances usage (a git client) [scripts/gitler](scripts/gitler):
  <img src="doc/gitler.gif" width="600" />
 
 # Installing
