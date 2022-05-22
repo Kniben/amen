@@ -17,7 +17,7 @@ Inspired by the amazing [fzf](https://github.com/junegunn/fzf).
 
 The project depends on Rust/Cargo to compile. Install it with your method of choice and run:
 ```
-cargo install --path .
+cargo install amen
 ```
 
 You may need to add `~/.cargo/bin` to your PATH:
