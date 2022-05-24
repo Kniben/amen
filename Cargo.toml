@@ -5,7 +5,7 @@ homepage = "https://github.com/Kniben/amen"
 repository = "https://github.com/Kniben/amen.git"
 license = "MIT"
 authors = ["alltidsemester <alltidsemester+git@pm.me>"]
-version = "0.0.2"
+version = "0.0.3"
 edition = "2021"
 
 [dependencies]

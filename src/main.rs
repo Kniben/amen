@@ -26,7 +26,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut layout = Layout::new(phrases, term_size);
 
     let remaining_lines = term_size.1 - tty.cursor_pos()?.1;
-    let scroll_amount = layout.size.1 - remaining_lines.min(layout.size.1);
+    let scroll_amount = layout.size.1 - remaining_lines.min(layout.size.1 - 1);
     layout.offset((0, tty.cursor_pos()?.1 - scroll_amount));
 
     write!(tty, "{}{}", cursor::Hide, cursor::Save)?;
